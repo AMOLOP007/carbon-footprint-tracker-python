@@ -722,3 +722,9 @@ body {
 [data-theme='light'] .goals-section { background: rgba(16, 185, 129, 0.05); border-color: #10b981; }
 [data-theme='light'] .navbar .logo-area span { color: #0f172a; }
 [data-theme='light'] .report-footer-card { background: linear-gradient(270deg, rgba(16, 185, 129, 0.05), rgba(59, 130, 246, 0.05), rgba(16, 185, 129, 0.05)); }
+
+/* Flatpickr Calendar Failsafe for Light Mode */
+[data-theme='light'] .flatpickr-calendar { background: #ffffff !important; box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; color: #1e293b !important; }
+[data-theme='light'] .flatpickr-months { background: #f8fafc !important; }
+[data-theme='light'] .flatpickr-current-month, [data-theme='light'] .flatpickr-monthSelect-month { color: #1e293b !important; }
+[data-theme='light'] .flatpickr-monthSelect-month:hover { background: #f1f5f9 !important; color: #0f172a !important; }

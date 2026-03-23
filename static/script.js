@@ -103,7 +103,7 @@ function applyTheme(mode) {
     // Update Flatpickr dynamically if it exists on page
     const fpTheme = document.getElementById('flatpickr-theme');
     if (fpTheme) {
-        fpTheme.href = isLight ? "https://npmcdn.com/flatpickr/dist/themes/light.css" : "https://npmcdn.com/flatpickr/dist/themes/dark.css";
+        fpTheme.disabled = isLight;
     }
 }
 
