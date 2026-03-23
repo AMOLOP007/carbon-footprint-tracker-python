@@ -724,7 +724,11 @@ body {
 [data-theme='light'] .report-footer-card { background: linear-gradient(270deg, rgba(16, 185, 129, 0.05), rgba(59, 130, 246, 0.05), rgba(16, 185, 129, 0.05)); }
 
 /* Flatpickr Calendar Failsafe for Light Mode */
-[data-theme='light'] .flatpickr-calendar { background: #ffffff !important; box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; color: #1e293b !important; }
+[data-theme='light'] .flatpickr-calendar { background: #ffffff !important; box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; border: 1px solid #e2e8f0; }
+[data-theme='light'] .flatpickr-calendar * { color: #1e293b !important; }
+[data-theme='light'] .flatpickr-calendar svg { fill: #1e293b !important; }
+
 [data-theme='light'] .flatpickr-months { background: #f8fafc !important; }
-[data-theme='light'] .flatpickr-current-month, [data-theme='light'] .flatpickr-monthSelect-month { color: #1e293b !important; }
-[data-theme='light'] .flatpickr-monthSelect-month:hover { background: #f1f5f9 !important; color: #0f172a !important; }
+[data-theme='light'] .flatpickr-monthSelect-month:hover { background: #e2e8f0 !important; color: #0f172a !important; }
+[data-theme='light'] .flatpickr-months .flatpickr-prev-month:hover svg, 
+[data-theme='light'] .flatpickr-months .flatpickr-next-month:hover svg { fill: #2563eb !important; }
