@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="{{ url_for('static', filename='aetherra_logo.svg') }}" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Report - Aetherra</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* PDF PRINT STYLES */
+        @media print {
+            body { background: white !important; color: black !important; padding: 0 !important; margin: 0 !important; }
+            .navbar, .report-footer-card .btn, a[href^="/report/"] { display: none !important; }
+            .page-content { padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
+            .card { background: white !important; border: 1px solid #ddd !important; box-shadow: none !important; break-inside: avoid; margin-bottom: 20px !important; }
+            h1, h3, h4, th, td, p, div { color: black !important; }
+            .emission-table th { background: #f0f0f0 !important; color: black !important; }
+            .emission-table td { border-bottom: 1px solid #ddd !important; }
+            .score-circle { border-color: black !important; color: black !important; box-shadow: none !important; }
+            .insights-block { border-left-color: #555 !important; background: #fafafa !important; }
+        }
+        #printHeader, #printFooter { display: none; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/dashboard" class="logo-area">
+        <img src="{{ url_for('static', filename='aetherra_logo.svg') }}" alt="Aetherra Logo">
+        <span>Aetherra</span>
+    </a>
+    <ul class="nav-links">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/calculator">Calculator</a></li>
+        <li><a href="/reports" class="active">Reports</a></li>
+        <li><a href="/goals">Goals</a></li>
+        <li><a href="/logout">Logout</a></li>
+    </ul>
+</nav>
+
+<div class="page-content">
+
+    <p style="margin-bottom:10px;">
+        <a href="/report/{{ report['id'] }}" style="color:#2ecc71; text-decoration:none; font-size:0.9rem;">Back to Report Detail</a>
+    </p>
+
+    <h1 class="page-title">Comprehensive Carbon Report</h1>
+    <p class="page-subtitle">AI-powered sustainability analysis for {{ report['month'] }}</p>
+
+    <!-- sustainability score -->
+    <div class="card" style="text-align:center;">
+        <h3>Sustainability Score</h3>
+        <div class="score-circle" style="color: {{ score_color }}; border-color: {{ score_color }}; box-shadow: 0 0 24px {{ score_color }}40;">{{ score }}</div>
+        <p style="color:#aaa; font-size:1rem; margin-top:8px;">
+            {{ score_text }}
+        </p>
+    </div>
+
+    <!-- full breakdown table -->
+    <div class="card">
+        <h3>Full Emission Breakdown</h3>
+        <table class="emission-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Amount (tCO2e)</th>
+                    <th>% of Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set total = [report['total_emissions'], 0.01]|max %}
+                <tr>
+                    <td>Company Transport</td>
+                    <td>{{ report['transport_emissions'] }}</td>
+                    <td>{{ (report['transport_emissions'] / total * 100) | round(1) }}%</td>
+                </tr>
+                <tr>
+                    <td>Electricity</td>
+                    <td>{{ report['electricity_emissions'] }}</td>
+                    <td>{{ (report['electricity_emissions'] / total * 100) | round(1) }}%</td>
+                </tr>
+                <tr>
+                    <td>Logistics</td>
+                    <td>{{ report['logistics_emissions'] }}</td>
+                    <td>{{ (report['logistics_emissions'] / total * 100) | round(1) }}%</td>
+                </tr>
+                <tr>
+                    <td>Manufacturing / Machinery</td>
+                    <td>{{ report['manufacturing_emissions'] }}</td>
+                    <td>{{ (report['manufacturing_emissions'] / total * 100) | round(1) }}%</td>
+                </tr>
+                <tr style="background:#1f1f1f;">
+                    <td style="color:#2ecc71; font-weight:700;">Total</td>
+                    <td style="color:#2ecc71; font-weight:700;">{{ total }}</td>
+                    <td style="color:#2ecc71;">100%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- per-asset item breakdown -->
+    {% if report.get('item_breakdown') and report['item_breakdown']|length > 0 %}
+    <div class="card">
+        <h3>Per-Asset Emissions Breakdown</h3>
+        <p style="color:#888; font-size:0.88rem; margin-bottom:12px;">Individual tracked items and their contribution to total emissions.</p>
+        <table class="emission-table">
+            <thead>
+                <tr>
+                    <th>Asset Name</th>
+                    <th>Type</th>
+                    <th>Emissions (tCO2e)</th>
+                    <th>Share</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in report['item_breakdown'] %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td style="text-transform: capitalize;">{{ item.get('type', '-') | replace('_', ' ') }}</td>
+                    <td>{{ item.emissions }}</td>
+                    <td>
+                        <div class="emission-bar"><div class="emission-bar-fill" style="width:{{ [(item.emissions / total * 100)|int, 100]|min }}%;"></div></div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <div style="margin-top:16px; background: rgba(0,0,0,0.2); padding:15px; border-radius:8px;">
+            <canvas id="itemBreakdownChart"></canvas>
+        </div>
+        <script>
+            var items = {{ report['item_breakdown'] | tojson | safe }};
+            var names = items.map(function(i) { return i.name; });
+            var values = items.map(function(i) { return i.emissions; });
+            var palette = ['#FF6384','#36A2EB','#FFCE56','#9B59B6','#2ecc71','#e74c3c','#f39c12','#1abc9c','#e67e22','#3498db'];
+            new Chart(document.getElementById('itemBreakdownChart'), {
+                type: 'bar',
+                data: {
+                    labels: names,
+                    datasets: [{
+                        label: 'Emissions (tCO2e)',
+                        data: values,
+                        backgroundColor: values.map(function(v,i) { return palette[i % palette.length]; }),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Emissions by Individual Asset', color: '#fff' }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#888' }, grid: { color: '#333' } },
+                        y: { ticks: { color: '#ccc' }, grid: { color: '#222' } }
+                    }
+                }
+            });
+        </script>
+    </div>
+    {% endif %}
+
+    <!-- ai insights by category -->
+    {% if insights %}
+    <div class="card">
+        <h3>AI-Generated Sustainability Insights</h3>
+
+        {% for cat, cat_insights in insights.items() %}
+        <div class="insights-block">
+            <h4>{{ cat | capitalize }}</h4>
+            <ul class="insight-list">
+                {% for tip in cat_insights %}
+                <li>{{ tip }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- footer actions -->
+    <div class="report-footer-card">
+        <h3>Report Generated by Aetherra</h3>
+        <p>Period: {{ report['month'] }} | Total: {{ report['total_emissions'] }} tCO2e</p>
+        <div style="margin-top:20px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+            <button onclick="window.print()" class="btn btn-primary" style="cursor: pointer;">Download PDF</button>
+            <a href="/reports" class="btn btn-outline">Back to Reports</a>
+        </div>
+    </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+<script>
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('print') === 'true') {
+            // slight delay to let charts and images render fully
+            setTimeout(() => { window.print(); }, 800);
+        }
+    };
+</script>
+</body>
+</html>

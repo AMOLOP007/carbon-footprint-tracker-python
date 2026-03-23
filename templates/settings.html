@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="{{ url_for('static', filename='aetherra_logo.svg') }}" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Settings - Aetherra</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .upload-area {
+            border: 2px dashed #2ecc71;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            background: rgba(46, 204, 113, 0.05);
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .upload-area input[type="file"] {
+            display: block;
+            margin: 10px auto;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/dashboard" class="logo-area">
+        <img src="{{ url_for('static', filename='aetherra_logo.svg') }}" alt="Aetherra Logo">
+        <span>Aetherra</span>
+    </a>
+    <ul class="nav-links">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/calculator">Calculator</a></li>
+        <li><a href="/reports">Reports</a></li>
+        <li><a href="/goals">Goals</a></li>
+        <li><a href="/settings" class="active">⚙️ Settings</a></li>
+        <li><a href="/logout">Logout</a></li>
+    </ul>
+</nav>
+
+<div class="page-content" style="max-width: 600px;">
+    <h1 class="page-title">⚙️ Company Settings</h1>
+    <p class="page-subtitle">Manage preferences and branding for {{ comp.name }} ({{ comp.domain|title }} Sector)</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-msg {{ category }}" style="text-align: center;">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card" style="margin-bottom: 24px; border-left: 4px solid #3498db;">
+        <h3 style="color: #3498db;">Organization Passcode</h3>
+        <p style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">Share this passcode with your employees so they can generate reports under your company's workspace.</p>
+        <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; text-align: center; font-family: monospace; font-size: 1.5rem; letter-spacing: 2px; color: #fff;">
+            {% if comp.access_code %}
+                {{ comp.access_code }}
+            {% else %}
+                Refresh page to generate
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Organization Branding</h3>
+        <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">Upload your company logo to be automatically embedded on all exported PDF Emission Reports.</p>
+        
+        <form action="/settings" method="POST" enctype="multipart/form-data">
+            <div class="upload-area">
+                <h4 style="color:#2ecc71; margin-bottom:8px;">Upload Logo</h4>
+                <p style="color:#888; font-size:0.8rem; margin-bottom: 15px;">Supported: .png, .jpg (Max 2MB)</p>
+                <input type="file" name="logo" accept="image/png, image/jpeg" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:14px; font-size:1rem;">
+                💾 Save Branding Preferences
+            </button>
+        </form>
+        
+        {% if comp.logo_path %}
+        <div style="margin-top: 25px; text-align: center; border-top: 1px solid #333; padding-top: 20px;">
+            <p style="color: #666; font-size:0.8rem; margin-bottom: 10px;">Current Custom Logo:</p>
+            <img src="/{{ comp.logo_path }}" alt="Company Logo" style="max-height: 80px; border-radius: 8px; border: 1px solid #444;">
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

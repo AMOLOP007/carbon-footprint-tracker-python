@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="{{ url_for('static', filename='aetherra_logo.svg') }}" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Bill Analyzer - Aetherra</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .upload-area {
+            border: 2px dashed #2ecc71;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            background: rgba(46, 204, 113, 0.05);
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .upload-area:hover {
+            background: rgba(46, 204, 113, 0.1);
+            border-color: #27ae60;
+        }
+        .upload-area input[type="file"] {
+            display: block;
+            margin: 10px auto;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/dashboard" class="logo-area">
+        <img src="{{ url_for('static', filename='aetherra_logo.svg') }}" alt="Aetherra Logo">
+        <span>Aetherra</span>
+    </a>
+    <ul class="nav-links">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/calculator">Calculator</a></li>
+        <li><a href="/reports">Reports</a></li>
+        <li><a href="/goals">Goals</a></li>
+        <li><a href="/logout">Logout</a></li>
+    </ul>
+</nav>
+
+<div class="page-content" style="max-width: 600px;">
+    <h1 class="page-title">📄 AI Bill Analyzer</h1>
+    <p class="page-subtitle">Upload your company electricity bill, fleet log, or manufacturing receipt. Our AI will automatically extract the consumption metrics and pre-fill your calculator natively.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-msg {{ category }}" style="text-align: center;">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card">
+        <form action="/upload-pdf" method="POST" enctype="multipart/form-data">
+            <div class="upload-area">
+                <h3 style="color:#2ecc71; margin-bottom:10px;">Drop PDF Here</h3>
+                <p style="color:#888; font-size:0.9rem; margin-bottom: 20px;">Supported Formats: .pdf</p>
+                <input type="file" name="file" accept="application/pdf" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:14px; font-size:1rem;">
+                🤖 Scan & Extract Data
+            </button>
+        </form>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

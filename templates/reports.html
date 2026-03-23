@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="{{ url_for('static', filename='aetherra_logo.svg') }}" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Reports - Aetherra</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/dashboard" class="logo-area">
+        <img src="{{ url_for('static', filename='aetherra_logo.svg') }}" alt="Aetherra Logo">
+        <span>Aetherra</span>
+    </a>
+    <ul class="nav-links">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/calculator">Calculator</a></li>
+        <li><a href="/reports" class="active">Reports</a></li>
+        <li><a href="/goals">Goals</a></li>
+        <li><a href="/logout">Logout</a></li>
+    </ul>
+</nav>
+
+<div class="page-content">
+    <h1 class="page-title">Company Emission Reports</h1>
+    <p class="page-subtitle">Your company's sustainability reports, {{ user_name }}.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-msg {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if grouped_reports %}
+    {% for month, reports in grouped_reports.items() %}
+    <h3 style="color:#2ecc71; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 8px;">{{ month }}</h3>
+    <div class="reports-grid">
+        {% for report in reports %}
+        <div class="report-card">
+            <h4>{{ report['title'] }}</h4>
+            <p class="date">📅 {{ report['month'] }}</p>
+            <div class="emissions-badge">{{ report['total_emissions'] }} tCO₂e</div>
+            <div class="report-actions">
+                <a href="/report/{{ report['id'] }}" class="btn btn-dark">View</a>
+                <a href="/comprehensive-report/{{ report['id'] }}?print=true" class="btn btn-primary">⬇ Download PDF</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="card">
+        <p style="color:#555; text-align:center; padding: 30px 0;">
+            No reports yet. Use the Company Emissions Calculator to generate your first report.
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

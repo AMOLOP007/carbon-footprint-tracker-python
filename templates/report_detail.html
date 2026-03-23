@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="{{ url_for('static', filename='aetherra_logo.svg') }}" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ report['title'] }} - Aetherra</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/dashboard" class="logo-area">
+        <img src="{{ url_for('static', filename='aetherra_logo.svg') }}" alt="Aetherra Logo">
+        <span>Aetherra</span>
+    </a>
+    <ul class="nav-links">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/calculator">Calculator</a></li>
+        <li><a href="/reports" class="active">Reports</a></li>
+        <li><a href="/goals">Goals</a></li>
+        <li><a href="/logout">Logout</a></li>
+    </ul>
+</nav>
+
+<div class="page-content">
+
+    <p style="margin-bottom:10px;">
+        <a href="/reports" style="color:#2ecc71; text-decoration:none; font-size:0.9rem;">← Back to Reports</a>
+    </p>
+
+    <h1 class="page-title">{{ report['title'] }}</h1>
+    <p class="page-subtitle">Period: {{ report['month'] }} &nbsp;|&nbsp; Total: {{ report['total_emissions'] }} tCO₂e</p>
+
+    <!-- emission breakdown -->
+    <div class="card">
+        <h3>📊 Emission Breakdown</h3>
+        <table class="emission-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Emissions (tCO₂e)</th>
+                    <th>Visual</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set total = [report['total_emissions'], 0.01]|max %}
+                <tr>
+                    <td>🚗 Company Transport</td>
+                    <td>{{ report['transport_emissions'] }}</td>
+                    <td>
+                        <div class="emission-bar">
+                            <div class="emission-bar-fill" style="width:{{ [(report['transport_emissions'] / total * 100)|int, 100]|min }}%"></div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>⚡ Office Electricity</td>
+                    <td>{{ report['electricity_emissions'] }}</td>
+                    <td>
+                        <div class="emission-bar">
+                            <div class="emission-bar-fill" style="width:{{ [(report['electricity_emissions'] / total * 100)|int, 100]|min }}%"></div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>📦 Logistics</td>
+                    <td>{{ report['logistics_emissions'] }}</td>
+                    <td>
+                        <div class="emission-bar">
+                            <div class="emission-bar-fill" style="width:{{ [(report['logistics_emissions'] / total * 100)|int, 100]|min }}%"></div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>🏭 Manufacturing</td>
+                    <td>{{ report['manufacturing_emissions'] }}</td>
+                    <td>
+                        <div class="emission-bar">
+                            <div class="emission-bar-fill" style="width:{{ [(report['manufacturing_emissions'] / total * 100)|int, 100]|min }}%"></div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- summary -->
+    <div class="card">
+        <h3>📝 Summary</h3>
+        <p style="color:#888; font-size:0.93rem; line-height:1.7;">
+            This report covers company carbon emissions for <strong style="color:#ccc;">{{ report['month'] }}</strong>.
+            Total emissions recorded: <strong style="color:#2ecc71;">{{ report['total_emissions'] }} tCO₂e</strong>.
+            Aetherra recommends focusing on the highest-emission category to maximize reduction impact.
+        </p>
+    </div>
+
+    <!-- action buttons -->
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:16px;">
+        <a href="/comprehensive-report/{{ report['id'] }}" class="btn btn-primary">
+            📋 Comprehensive Report
+        </a>
+        <a href="/comprehensive-report/{{ report['id'] }}?print=true" class="btn btn-dark">
+            ⬇ Download PDF
+        </a>
+    </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

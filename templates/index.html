@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="{{ url_for('static', filename='aetherra_logo.svg') }}" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Aetherra</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/dashboard" class="logo-area">
+        <img src="{{ url_for('static', filename='aetherra_logo.svg') }}" alt="Aetherra Logo">
+        <span>Aetherra</span>
+    </a>
+    <ul class="nav-links">
+        <li><a href="/dashboard" class="active">Dashboard</a></li>
+        <li><a href="/calculator">Calculator</a></li>
+        <li><a href="/reports">Reports</a></li>
+        <li><a href="/goals">Goals</a></li>
+        <li><a href="/logout">Logout</a></li>
+    </ul>
+</nav>
+
+<div class="page-content">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Welcome back, {{ user_name }} -- Here's your company's carbon overview.</p>
+
+    <!-- ai insight banner -->
+    {% if insight %}
+    <div class="insight-banner">
+        <strong>AI Insight</strong>
+        {{ insight }}
+    </div>
+    {% endif %}
+
+    <!-- stats cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="label">Total Emissions</div>
+            <div class="value">{{ stats.total_emissions }}</div>
+            <div class="unit">tCO2e</div>
+        </div>
+        <div class="stat-card green">
+            <div class="label">Reduction Trend</div>
+            <div class="value">{{ stats.monthly_reduction }}%</div>
+            <div class="unit">compared to first report</div>
+        </div>
+        <div class="stat-card grey">
+            <div class="label">Active Reports</div>
+            <div class="value">{{ stats.active_reports }}</div>
+            <div class="unit">company emission reports</div>
+        </div>
+        <div class="stat-card" id="gridIntensityCard">
+            <div class="label">Live Grid Intensity <span id="gridSource" style="font-size:0.65rem; color:#888;">(Loading...)</span></div>
+            <div class="value" id="gridValue">--</div>
+            <div class="unit">gCO2/kWh <span id="gridIndex" style="text-transform:capitalize; color:#ccc;"></span></div>
+        </div>
+    </div>
+
+    <!-- fetch intensity data asynchronously -->
+    <script>
+        fetch('/api/grid-intensity')
+            .then(r => r.json())
+            .then(data => {
+                const isLimitHit = data.source.includes("Limit");
+                document.getElementById('gridValue').innerText = data.intensity;
+                document.getElementById('gridValue').style.color = isLimitHit ? "#f39c12" : "#2ecc71";
+                document.getElementById('gridIndex').innerText = "(" + data.index + ")";
+                document.getElementById('gridSource').innerText = "- " + data.source;
+            })
+            .catch(err => console.log('Grid API err:', err));
+    </script>
+
+    <!-- emission overview section -->
+    <div class="card" style="margin-top: 24px;">
+        <h3>Company Emissions Overview</h3>
+        {% if reports|length == 0 %}
+            <div class="ghost-dashboard">
+                <div class="ghost-header">
+                    <div class="pulse-bar short"></div>
+                    <div class="pulse-bar long"></div>
+                </div>
+                
+                <div class="ghost-visual-grid">
+                    <div class="ghost-chart-circle">
+                        <div class="inner-pulse"></div>
+                    </div>
+                    <div class="ghost-data-lines">
+                        <div class="pulse-line"></div>
+                        <div class="pulse-line"></div>
+                        <div class="pulse-line"></div>
+                    </div>
+                </div>
+
+                <div class="ghost-cta">
+                    <p>No data yet. Submit your company's first emission calculation to see live insights and trends.</p>
+                    <a href="/calculator" class="btn btn-primary pulse-btn">Start My First Calculation</a>
+                </div>
+            </div>
+
+            <style>
+                .ghost-dashboard {
+                    padding: 40px;
+                    text-align: center;
+                    background: rgba(255,255,255,0.02);
+                    border: 1px dashed rgba(46, 204, 113, 0.2);
+                    border-radius: 12px;
+                    position: relative;
+                    overflow: hidden;
+                }
+                .ghost-header {
+                    margin-bottom: 30px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 10px;
+                }
+                .pulse-bar {
+                    height: 12px;
+                    background: rgba(255,255,255,0.05);
+                    border-radius: 6px;
+                    animation: pulse 2s infinite ease-in-out;
+                }
+                .pulse-bar.short { width: 120px; }
+                .pulse-bar.long { width: 200px; }
+
+                .ghost-visual-grid {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 40px;
+                    margin-bottom: 40px;
+                    opacity: 0.6;
+                }
+                .ghost-chart-circle {
+                    width: 120px;
+                    height: 120px;
+                    border: 8px solid rgba(46, 204, 113, 0.05);
+                    border-radius: 50%;
+                    position: relative;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+                .inner-pulse {
+                    width: 60px;
+                    height: 60px;
+                    background: rgba(46, 204, 113, 0.1);
+                    border-radius: 50%;
+                    animation: circle-pulse 3s infinite ease-in-out;
+                }
+                .ghost-data-lines {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    width: 150px;
+                }
+                .pulse-line {
+                    height: 8px;
+                    background: rgba(255,255,255,0.05);
+                    border-radius: 4px;
+                    animation: pulse 2s infinite ease-in-out;
+                }
+                .pulse-line:nth-child(2) { animation-delay: 0.4s; width: 80%; }
+                .pulse-line:nth-child(3) { animation-delay: 0.8s; width: 60%; }
+
+                .ghost-cta p {
+                    color: #888;
+                    margin-bottom: 24px;
+                    font-size: 1.05rem;
+                }
+                
+                .pulse-btn {
+                    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4);
+                    animation: btn-pulse 2s infinite;
+                }
+
+                @keyframes pulse {
+                    0% { background: rgba(255,255,255,0.05); }
+                    50% { background: rgba(255,255,255,0.12); }
+                    100% { background: rgba(255,255,255,0.05); }
+                }
+                @keyframes circle-pulse {
+                    0% { transform: scale(0.8); opacity: 0.3; }
+                    50% { transform: scale(1.1); opacity: 0.6; }
+                    100% { transform: scale(0.8); opacity: 0.3; }
+                }
+                @keyframes btn-pulse {
+                    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4); }
+                    70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(46, 204, 113, 0); }
+                    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+                }
+            </style>
+        {% else %}
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 300px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
+                    <canvas id="trendChart"></canvas>
+                </div>
+                <div style="flex: 1; min-width: 300px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- item breakdown chart -->
+            {% set latest = reports[0] %}
+            {% if latest.get('item_breakdown') and latest['item_breakdown']|length > 0 %}
+            <div style="margin-top: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
+                <canvas id="itemChart"></canvas>
+            </div>
+            {% endif %}
+
+            <script>
+                const reportsData = {{ reports | tojson | safe }};
+                const chronoData = [...reportsData].reverse();
+
+                // get unique months in order
+                const seen = {};
+                const labels = [];
+                const trendData = [];
+                chronoData.forEach(function(r) {
+                    if (!seen[r.month]) {
+                        seen[r.month] = true;
+                        labels.push(r.month);
+                        trendData.push(r.total_emissions || 0);
+                    }
+                });
+
+                // line chart - emission trend over time
+                new Chart(document.getElementById('trendChart'), {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Total Emissions (tCO2e)',
+                            data: trendData,
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { labels: { color: '#ccc' } },
+                            title: { display: true, text: 'Emission Trend Over Time', color: '#fff' }
+                        },
+                        scales: {
+                            x: { ticks: { color: '#888' }, grid: { color: '#333' } },
+                            y: { ticks: { color: '#888' }, grid: { color: '#333' } }
+                        }
+                    }
+                });
+
+                // doughnut chart - category breakdown from latest report
+                var latestReport = reportsData[0];
+                new Chart(document.getElementById('categoryChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Transport', 'Electricity', 'Logistics', 'Manufacturing'],
+                        datasets: [{
+                            data: [
+                                latestReport.transport_emissions || 0,
+                                latestReport.electricity_emissions || 0,
+                                latestReport.logistics_emissions || 0,
+                                latestReport.manufacturing_emissions || 0
+                            ],
+                            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#9B59B6'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'right', labels: { color: '#ccc' } },
+                            title: { display: true, text: 'Category Breakdown (Latest)', color: '#fff' }
+                        }
+                    }
+                });
+
+                // item-level horizontal bar chart
+                var itemCanvas = document.getElementById('itemChart');
+                if (itemCanvas && latestReport.item_breakdown && latestReport.item_breakdown.length > 0) {
+                    var itemLabels = latestReport.item_breakdown.map(function(i) { return i.name || 'Unnamed'; });
+                    var itemValues = latestReport.item_breakdown.map(function(i) { return i.emissions || 0; });
+                    var barColors = ['#FF6384','#36A2EB','#FFCE56','#9B59B6','#2ecc71','#e74c3c','#f39c12','#1abc9c','#e67e22','#3498db'];
+                    var colors = itemValues.map(function(v, i) { return barColors[i % barColors.length]; });
+
+                    new Chart(itemCanvas, {
+                        type: 'bar',
+                        data: {
+                            labels: itemLabels,
+                            datasets: [{
+                                label: 'Emissions per Asset (tCO2e)',
+                                data: itemValues,
+                                backgroundColor: colors,
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            plugins: {
+                                legend: { display: false },
+                                title: { display: true, text: 'Per-Asset Emissions Breakdown (Latest Report)', color: '#fff' }
+                            },
+                            scales: {
+                                x: { ticks: { color: '#888' }, grid: { color: '#333' } },
+                                y: { ticks: { color: '#ccc' }, grid: { color: '#222' } }
+                            }
+                        }
+                    });
+                }
+            </script>
+        {% endif %}
+    </div>
+
+    <!-- quick action buttons -->
+    <div class="card" style="margin-top: 24px;">
+        <h3>Quick Actions</h3>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <a href="/calculator" class="btn btn-primary">Emissions Calculator</a>
+            <a href="/upload-pdf" class="btn btn-dark">AI PDF Analyzer</a>
+            <a href="/reports" class="btn btn-dark">View Reports</a>
+            <a href="/goals" class="btn btn-dark">Set Goals</a>
+            <a href="/settings" class="btn btn-outline" style="flex:1;">⚙️ Settings</a>
+        </div>
+    </div>
+
+    <!-- about us section -->
+    <div class="card" style="margin-top: 24px; padding: 30px; background: rgba(0,0,0,0.25); border-left: 4px solid #2ecc71; border-radius: 8px;">
+        <h3 style="margin-bottom: 15px; color: #2ecc71; font-weight: bold;">About Aetherra</h3>
+        <p style="color: #ccc; line-height: 1.6; font-size: 0.95rem; margin: 0;">
+            Aetherra is a comprehensive Corporate Carbon Intelligence platform engineered to seamlessly track, measure, and analyze scope emissions across multiple operational domains including Technology, Manufacturing, Logistics, and Construction. 
+            <br><br>
+            By integrating real-time Grid Intensity analysis via API, deep AI-powered extraction from standard corporate PDF reports, and intelligent dynamic visualizations, Aetherra empowers organizations to effortlessly transform isolated operational data into actionable, audit-ready sustainability metrics.
+        </p>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

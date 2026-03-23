@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="{{ url_for('static', filename='aetherra_logo.svg') }}" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Profile - Aetherra</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .wizard-step { display: none; animation: slideUpFade 0.4s ease forwards; }
+        .wizard-step.active { display: block; }
+        .step-indicators { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
+        .step-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.3s; }
+        .step-dot.active { background: var(--acc-primary); box-shadow: 0 0 10px var(--acc-primary-glow); transform: scale(1.2); }
+        .step-buttons { display: flex; justify-content: space-between; margin-top: 25px; }
+    </style>
+</head>
+<body>
+<div class="auth-page">
+    <div class="auth-card">
+
+        <div class="logo-area">
+            <img src="{{ url_for('static', filename='aetherra_logo.svg') }}" alt="Aetherra Logo">
+            <span>Aetherra</span>
+        </div>
+
+        <h2>Complete Your Profile</h2>
+        <p class="subtitle" id="step-subtitle">Step 1: Set up your workspace</p>
+
+        <div class="step-indicators">
+            <div class="step-dot active" id="dot-1"></div>
+            <div class="step-dot" id="dot-2"></div>
+            <div class="step-dot" id="dot-3"></div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-msg {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="/onboarding" method="POST" enctype="multipart/form-data" id="onboardingForm">
+            
+            <!-- STEP 1: Company Info -->
+            <div class="wizard-step active" id="step-1">
+                <div class="form-group">
+                    <label for="company_name">Company Name</label>
+                    <input type="text" id="company_name" name="company_name" placeholder="e.g. Acme Corp" required>
+                </div>
+                <div class="form-group">
+                    <label for="logo">Company Logo (.png, .jpg)</label>
+                    <input type="file" id="logo" name="logo" accept=".png,.jpg,.jpeg,.svg" required>
+                </div>
+                <div class="step-buttons" style="justify-content: flex-end;">
+                    <button type="button" class="btn btn-primary" onclick="nextStep(1)">Continue ✨</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Role Details -->
+            <div class="wizard-step" id="step-2">
+                <div class="form-group">
+                    <label for="post">Your Designation / Post</label>
+                    <input type="text" id="post" name="post" placeholder="e.g. Facilities Manager" required>
+                </div>
+                <div class="step-buttons">
+                    <button type="button" class="btn btn-outline" onclick="prevStep(2)">Back</button>
+                    <button type="button" class="btn btn-primary" onclick="nextStep(2)">Next Step 🚀</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Industry Domain -->
+            <div class="wizard-step" id="step-3">
+                <div class="form-group">
+                    <label for="domain">Company Domain (Industry)</label>
+                    <select id="domain" name="domain" required>
+                        <option value="" disabled selected>Select an industry...</option>
+                        <option value="construction">Construction</option>
+                        <option value="logistics">Logistics & Transport</option>
+                        <option value="manufacturing">Manufacturing</option>
+                        <option value="technology">Technology & IT</option>
+                    </select>
+                </div>
+                <div class="step-buttons">
+                    <button type="button" class="btn btn-outline" onclick="prevStep(3)">Back</button>
+                    <button type="submit" class="btn btn-primary">Enter Workspace 🌍</button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    function nextStep(currentStep) {
+        // Basic validation before moving
+        if(currentStep === 1) {
+            if(!document.getElementById('company_name').value || !document.getElementById('logo').value) {
+                alert("Please fill out the Company Name and select a Logo.");
+                return;
+            }
+        }
+        if(currentStep === 2) {
+            if(!document.getElementById('post').value) {
+                alert("Please enter your Designation.");
+                return;
+            }
+        }
+
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        document.getElementById('dot-' + currentStep).classList.remove('active');
+        
+        let next = currentStep + 1;
+        document.getElementById('step-' + next).classList.add('active');
+        document.getElementById('dot-' + next).classList.add('active');
+        
+        updateSubtitle(next);
+    }
+
+    function prevStep(currentStep) {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        document.getElementById('dot-' + currentStep).classList.remove('active');
+        
+        let prev = currentStep - 1;
+        document.getElementById('step-' + prev).classList.add('active');
+        document.getElementById('dot-' + prev).classList.add('active');
+        
+        updateSubtitle(prev);
+    }
+
+    function updateSubtitle(step) {
+        let subs = {
+            1: "Step 1: Set up your workspace",
+            2: "Step 2: Tell us about your role",
+            3: "Step 3: What industry are you in?"
+        };
+        document.getElementById('step-subtitle').innerText = subs[step];
+    }
+</script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

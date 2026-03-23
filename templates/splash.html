@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="{{ url_for('static', filename='aetherra_logo.svg') }}" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aetherra - Company Carbon Intelligence</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        @keyframes wave {
+            0%, 20%, 100% { transform: rotate(0deg); }
+            5% { transform: rotate(15deg); }
+            10% { transform: rotate(-10deg); }
+            15% { transform: rotate(5deg); }
+        }
+        .logo-big img {
+            animation: wave 5s infinite ease-in-out;
+            transform-origin: bottom center;
+        }
+    </style>
+</head>
+<body>
+<div class="splash-page">
+
+    <div class="logo-big">
+        <img src="{{ url_for('static', filename='aetherra_logo.svg') }}" alt="Aetherra Logo">
+    </div>
+
+    <h1>Aetherra</h1>
+    <p>Company Carbon Monitoring & Intelligence Platform</p>
+
+    <div class="splash-buttons">
+        <a href="/login" class="btn btn-primary">Sign In</a>
+        <a href="/register" class="btn btn-outline">Create Account</a>
+    </div>
+
+    <p style="margin-top: 50px; font-size: 0.8rem; color: rgba(255,255,255,0.25);">
+        Aetherra Platform &nbsp;|&nbsp; Pillai College of Engineering, Panvel
+    </p>
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

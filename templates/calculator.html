@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="{{ url_for('static', filename='aetherra_logo.svg') }}" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ domain|title }} Emissions Calculator - Aetherra</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .item-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid #222; flex-wrap: wrap; }
+        .item-row input, .item-row select { flex: 1; min-width: 100px; }
+        .item-row .remove-btn { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; flex-shrink: 0; }
+        .item-row .remove-btn:hover { background: #c0392b; }
+        .add-btn { background: rgba(46,204,113,0.1); color: #2ecc71; border: 2px dashed #2ecc71; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 0.9rem; margin-top: 8px; transition: all 0.2s; }
+        .add-btn:hover { background: rgba(46,204,113,0.2); }
+        .goals-section { background: rgba(46,204,113,0.05); border: 1px solid #2ecc71; border-radius: 10px; padding: 20px; margin-top: 20px; }
+        .goal-tag { display: inline-block; background: rgba(46,204,113,0.15); color: #2ecc71; padding: 6px 14px; border-radius: 20px; margin: 4px; cursor: pointer; font-size: 0.85rem; border: 1px solid transparent; transition: all 0.2s; }
+        .goal-tag:hover, .goal-tag.selected { background: #2ecc71; color: #0f0f0f; border-color: #2ecc71; }
+        .item-row label { font-size: 0.8rem; color: #888; min-width: 60px; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/dashboard" class="logo-area">
+        <img src="{{ url_for('static', filename='aetherra_logo.svg') }}" alt="Aetherra Logo">
+        <span>Aetherra</span>
+    </a>
+    <ul class="nav-links">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/calculator" class="active">Calculator</a></li>
+        <li><a href="/reports">Reports</a></li>
+        <li><a href="/goals">Goals</a></li>
+        <li><a href="/logout">Logout</a></li>
+    </ul>
+</nav>
+
+<div class="page-content">
+    <h1 class="page-title">{{ domain|title }} Emissions Calculator</h1>
+    <p class="page-subtitle">Track individual assets and their carbon footprint across your {{ domain }} operations.</p>
+
+    <div style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+        <a href="/upload-pdf" class="btn btn-outline" style="background:#1b1b1b; padding:10px 20px; font-size:0.9rem;">Auto-fill with AI (Upload PDF)</a>
+        {% if domain == 'logistics' %}
+        <button type="button" class="btn" style="background:#2980b9; color:white; padding:10px 20px; font-size:0.9rem; border:none; border-radius:5px; cursor:pointer;" onclick="document.getElementById('mapModal').style.display='flex'">📍 Indian Routes Tool</button>
+        {% endif %}
+        <a href="/goals" class="btn btn-dark" style="padding:10px 20px; font-size:0.9rem;">Set Goals</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-msg {{ category }}" style="text-align: center;">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form action="/calculator" method="POST" id="calcForm">
+        <input type="hidden" name="items_json" id="items_json" value="">
+
+        {% if domain == 'technology' %}
+        <!-- TECHNOLOGY: Track individual rooms/zones -->
+        <div class="calc-section">
+            <h3>Rooms / Office Zones</h3>
+            <p style="color:#888; font-size:0.85rem; margin-bottom:12px;">Add each room or zone in your office. Track which areas consume the most energy.</p>
+            <div id="rooms-container"></div>
+            <button type="button" class="add-btn" onclick="addRoom()">+ Add Room / Zone</button>
+        </div>
+        <div class="calc-section">
+            <h3>Server Infrastructure</h3>
+            <div class="form-group">
+                <label>Total Server/Cloud Energy (kWh per month)</label>
+                <input type="number" name="server_kwh" value="{{ ext.get('server_kwh', 0) }}" min="0" step="0.01" required>
+            </div>
+        </div>
+        <div class="calc-section">
+            <h3>Employee Commute</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Total Staff Commute Distance (km/month)</label>
+                    <input type="number" name="commute_km" value="{{ ext.get('commute_km', 0) }}" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Business Flights This Month</label>
+                    <input type="number" name="flights" value="{{ ext.get('flights', 0) }}" min="0" required>
+                </div>
+            </div>
+        </div>
+
+        {% elif domain == 'logistics' %}
+        <!-- LOGISTICS: Track individual vehicles -->
+        <div class="calc-section">
+            <h3>Fleet Vehicles</h3>
+            <p style="color:#888; font-size:0.85rem; margin-bottom:12px;">Add each vehicle in your fleet. Track fuel consumption, distance, and hours per vehicle.</p>
+            <div id="vehicles-container"></div>
+            <button type="button" class="add-btn" onclick="addVehicle()">+ Add Vehicle</button>
+        </div>
+        <div class="calc-section">
+            <h3>Warehouse Operations</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Total Warehouse Electricity (kWh)</label>
+                    <input type="number" name="warehouse_kwh" value="{{ ext.get('warehouse_kwh', 0) }}" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Total Freight Weight Delivered (kg)</label>
+                    <input type="number" name="total_freight_weight" value="{{ ext.get('total_freight_weight', 0) }}" min="0" required>
+                </div>
+            </div>
+        </div>
+
+        {% elif domain == 'construction' %}
+        <!-- CONSTRUCTION: Track individual equipment pieces -->
+        <div class="calc-section">
+            <h3>Heavy Equipment on Site</h3>
+            <p style="color:#888; font-size:0.85rem; margin-bottom:12px;">Add each piece of equipment. Track fuel usage and operating hours per machine.</p>
+            <div id="equipment-container"></div>
+            <button type="button" class="add-btn" onclick="addEquipment()">+ Add Equipment</button>
+        </div>
+        <div class="calc-section">
+            <h3>Site Transport</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Material Hauling Trucks (km)</label>
+                    <input type="number" name="trucks_km" value="{{ ext.get('trucks_km', 0) }}" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Crew Transport Cars (km)</label>
+                    <input type="number" name="cars_km" value="{{ ext.get('cars_km', 0) }}" min="0" required>
+                </div>
+            </div>
+        </div>
+        <div class="calc-section">
+            <h3>Site Power</h3>
+            <div class="form-group">
+                <label>Temporary Site Electricity (kWh)</label>
+                <input type="number" name="office_kwh" value="{{ ext.get('office_kwh', 0) }}" min="0" required>
+            </div>
+        </div>
+
+        {% elif domain == 'manufacturing' %}
+        <!-- MANUFACTURING: Track individual production lines / machines -->
+        <div class="calc-section">
+            <h3>Production Lines / Machines</h3>
+            <p style="color:#888; font-size:0.85rem; margin-bottom:12px;">Add each machine or production line. Track operating hours and energy draw per unit.</p>
+            <div id="machines-container"></div>
+            <button type="button" class="add-btn" onclick="addMachine()">+ Add Machine / Line</button>
+        </div>
+        <div class="calc-section">
+            <h3>Factory Utilities</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Factory Grid Electricity (kWh)</label>
+                    <input type="number" name="factory_kwh" value="{{ ext.get('factory_kwh', 0) }}" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Internal Fleet Driving (km)</label>
+                    <input type="number" name="fleet_km" value="{{ ext.get('fleet_km', 0) }}" min="0" required>
+                </div>
+            </div>
+        </div>
+        <div class="calc-section">
+            <h3>Outbound Shipments</h3>
+            <div class="form-group">
+                <label>Finished Goods Shipped (kg)</label>
+                <input type="number" name="shipment_kg" value="{{ ext.get('shipment_kg', 0) }}" min="0" required>
+            </div>
+        </div>
+
+        {% else %}
+        <p>Your domain configuration is not recognized. Please contact support.</p>
+        {% endif %}
+
+        <div class="calc-section">
+            <h3>Report Period</h3>
+            <div class="form-group">
+                <label for="report_month">Month</label>
+                <input type="month" id="report_month" name="report_month" required>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%; padding:14px; font-size:1rem;">
+            Calculate & Save Emissions
+        </button>
+    </form>
+</div>
+
+<script>
+// serialize all dynamic items before form submit
+document.getElementById('calcForm').addEventListener('submit', function() {
+    var items = [];
+    var domain = '{{ domain }}';
+
+    if (domain === 'technology') {
+        document.querySelectorAll('#rooms-container .item-row').forEach(function(row) {
+            items.push({
+                name: row.querySelector('[data-field="name"]').value,
+                kwh: parseFloat(row.querySelector('[data-field="kwh"]').value) || 0,
+                type: row.querySelector('[data-field="type"]').value
+            });
+        });
+    } else if (domain === 'logistics') {
+        document.querySelectorAll('#vehicles-container .item-row').forEach(function(row) {
+            items.push({
+                name: row.querySelector('[data-field="name"]').value,
+                type: row.querySelector('[data-field="type"]').value,
+                fuel_litres: parseFloat(row.querySelector('[data-field="fuel"]').value) || 0,
+                distance_km: parseFloat(row.querySelector('[data-field="distance"]').value) || 0,
+                hours: parseFloat(row.querySelector('[data-field="hours"]').value) || 0
+            });
+        });
+    } else if (domain === 'construction') {
+        document.querySelectorAll('#equipment-container .item-row').forEach(function(row) {
+            items.push({
+                name: row.querySelector('[data-field="name"]').value,
+                type: row.querySelector('[data-field="type"]').value,
+                fuel_litres: parseFloat(row.querySelector('[data-field="fuel"]').value) || 0,
+                hours: parseFloat(row.querySelector('[data-field="hours"]').value) || 0
+            });
+        });
+    } else if (domain === 'manufacturing') {
+        document.querySelectorAll('#machines-container .item-row').forEach(function(row) {
+            items.push({
+                name: row.querySelector('[data-field="name"]').value,
+                hours: parseFloat(row.querySelector('[data-field="hours"]').value) || 0,
+                kwh: parseFloat(row.querySelector('[data-field="kwh"]').value) || 0
+            });
+        });
+    }
+
+    document.getElementById('items_json').value = JSON.stringify(items);
+});
+
+// TECHNOLOGY - add room
+function addRoom(item = {}) {
+    var c = document.getElementById('rooms-container');
+    var div = document.createElement('div');
+    div.className = 'item-row';
+    var n = item.name || ''; var t = item.type || 'office'; var k = item.kwh || '';
+    
+    div.innerHTML = '<label>Name</label><input data-field="name" type="text" placeholder="e.g. Server Room A" value="' + n + '" required>' +
+        '<label>Type</label><select data-field="type">' +
+            '<option value="office" ' + (t=='office'?'selected':'') + '>Office</option>' +
+            '<option value="server_room" ' + (t=='server_room'?'selected':'') + '>Server Room</option>' +
+            '<option value="lab" ' + (t=='lab'?'selected':'') + '>Lab</option>' +
+            '<option value="meeting" ' + (t=='meeting'?'selected':'') + '>Meeting Room</option>' +
+            '<option value="cafeteria" ' + (t=='cafeteria'?'selected':'') + '>Cafeteria</option>' +
+        '</select>' +
+        '<label>kWh</label><input data-field="kwh" type="number" placeholder="Monthly kWh" min="0" step="0.01" value="' + k + '" required>' +
+        '<button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>';
+    c.appendChild(div);
+}
+
+// LOGISTICS - add vehicle
+function addVehicle(item = {}) {
+    var c = document.getElementById('vehicles-container');
+    var div = document.createElement('div');
+    div.className = 'item-row';
+    var n = item.name || ''; var t = item.type || 'truck'; var f = item.fuel_litres || ''; var d = item.distance_km || ''; var h = item.hours || '';
+    
+    div.innerHTML = '<label>Name</label><input data-field="name" type="text" placeholder="e.g. Truck MH-04-1234" value="' + n + '" required>' +
+        '<label>Type</label><select data-field="type">' +
+            '<option value="delivery_van" ' + (t=='delivery_van'?'selected':'') + '>Delivery Van</option>' +
+            '<option value="truck" ' + (t=='truck'?'selected':'') + '>Heavy Truck</option>' +
+            '<option value="pickup" ' + (t=='pickup'?'selected':'') + '>Pickup</option>' +
+            '<option value="car" ' + (t=='car'?'selected':'') + '>Car</option>' +
+            '<option value="motorcycle" ' + (t=='motorcycle'?'selected':'') + '>Motorcycle</option>' +
+        '</select>' +
+        '<label>Fuel (L)</label><input data-field="fuel" type="number" placeholder="Litres" min="0" step="0.1" value="' + f + '" required>' +
+        '<label>Dist (km)</label><input data-field="distance" type="number" placeholder="Distance" min="0" value="' + d + '" required>' +
+        '<label>Hours</label><input data-field="hours" type="number" placeholder="Hours" min="0" step="0.1" value="' + h + '" required>' +
+        '<button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>';
+    c.appendChild(div);
+}
+
+// CONSTRUCTION - add equipment
+function addEquipment(item = {}) {
+    var c = document.getElementById('equipment-container');
+    var div = document.createElement('div');
+    div.className = 'item-row';
+    var n = item.name || ''; var t = item.type || 'excavator'; var f = item.fuel_litres || ''; var h = item.hours || '';
+    
+    div.innerHTML = '<label>Name</label><input data-field="name" type="text" placeholder="e.g. Excavator #3" value="' + n + '" required>' +
+        '<label>Type</label><select data-field="type">' +
+            '<option value="excavator" ' + (t=='excavator'?'selected':'') + '>Excavator</option>' +
+            '<option value="crane" ' + (t=='crane'?'selected':'') + '>Crane</option>' +
+            '<option value="bulldozer" ' + (t=='bulldozer'?'selected':'') + '>Bulldozer</option>' +
+            '<option value="loader" ' + (t=='loader'?'selected':'') + '>Loader</option>' +
+            '<option value="concrete_mixer" ' + (t=='concrete_mixer'?'selected':'') + '>Concrete Mixer</option>' +
+            '<option value="generator" ' + (t=='generator'?'selected':'') + '>Generator</option>' +
+        '</select>' +
+        '<label>Fuel (L)</label><input data-field="fuel" type="number" placeholder="Diesel litres" min="0" step="0.1" value="' + f + '" required>' +
+        '<label>Hours</label><input data-field="hours" type="number" placeholder="Operating hrs" min="0" step="0.1" value="' + h + '" required>' +
+        '<button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>';
+    c.appendChild(div);
+}
+
+// MANUFACTURING - add machine
+function addMachine(item = {}) {
+    var c = document.getElementById('machines-container');
+    var div = document.createElement('div');
+    div.className = 'item-row';
+    var n = item.name || ''; var h = item.hours || ''; var k = item.kwh || '';
+    
+    div.innerHTML = '<label>Name</label><input data-field="name" type="text" placeholder="e.g. CNC Mill #1" value="' + n + '" required>' +
+        '<label>Hours</label><input data-field="hours" type="number" placeholder="Run hours" min="0" step="0.1" value="' + h + '" required>' +
+        '<label>kWh</label><input data-field="kwh" type="number" placeholder="Energy draw" min="0" step="0.01" value="' + k + '" required>' +
+        '<button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>';
+    c.appendChild(div);
+}
+
+// Process injection of items on page load
+window.addEventListener('DOMContentLoaded', function() {
+    var domain = '{{ domain }}';
+    // Use Jinja to securely pass the items array directly to JS
+    var prefilledItems = {{ ext_items | default([]) | tojson | safe }};
+    
+    if (prefilledItems && prefilledItems.length > 0) {
+        // Iterate over the dynamically extracted items and build the DOM
+        prefilledItems.forEach(function(item) {
+            if (domain === 'technology') addRoom(item);
+            else if (domain === 'logistics') addVehicle(item);
+            else if (domain === 'construction') addEquipment(item);
+            else if (domain === 'manufacturing') addMachine(item);
+        });
+    } else {
+        // Fallback: Just insert one empty row if no items exist
+        if (domain === 'technology') addRoom();
+        else if (domain === 'logistics') addVehicle();
+        else if (domain === 'construction') addEquipment();
+        else if (domain === 'manufacturing') addMachine();
+    }
+});
+</script>
+
+<!-- Map Distance Modal -->
+<div id="mapModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center;">
+    <div style="background:#1b1b1b; padding:20px; border-radius:10px; width:400px; border:1px solid #2ecc71;">
+        <h3 style="margin-top:0;">📍 Calculate Distance (India)</h3>
+        <p style="font-size:0.85rem; color:#aaa;">Use Google Maps to find exact driving distances between Indian cities or states.</p>
+        <div class="form-group">
+            <label>Origin</label>
+            <input type="text" id="mapOrigin" placeholder="e.g. Mumbai, Maharashtra" style="width:100%; padding:10px; border-radius:5px; background:#0f0f0f; border:1px solid #333; color:white; margin-bottom:10px;">
+        </div>
+        <div class="form-group">
+            <label>Destination</label>
+            <input type="text" id="mapDest" placeholder="e.g. New Delhi, Delhi" style="width:100%; padding:10px; border-radius:5px; background:#0f0f0f; border:1px solid #333; color:white;">
+        </div>
+        <div style="margin-top:15px; display:flex; gap:10px;">
+            <button type="button" class="btn btn-primary" onclick="calcMapDistance()" style="flex:1;">Get Distance (km)</button>
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('mapModal').style.display='none'" style="flex:1;">Close</button>
+        </div>
+        <p id="mapResult" style="margin-top:15px; font-weight:bold; color:#2ecc71; text-align:center;"></p>
+    </div>
+</div>
+
+<script>
+async function calcMapDistance() {
+    const orig = document.getElementById('mapOrigin').value;
+    const dest = document.getElementById('mapDest').value;
+    if(!orig || !dest) return alert("Please enter both origin and destination");
+    
+    document.getElementById('mapResult').innerText = 'Calculating...';
+    try {
+        const res = await fetch(`/api/route_distance?origin=${encodeURIComponent(orig)}&destination=${encodeURIComponent(dest)}`);
+        const data = await res.json();
+        if(data.distance_km) {
+            document.getElementById('mapResult').innerHTML = `Distance: <b>${data.distance_km} km</b> <button onclick="navigator.clipboard.writeText('${data.distance_km}')" style="margin-left:10px; padding:2px 8px; font-size:0.75rem; background:#444; color:white; border:none; border-radius:3px; cursor:pointer;">Copy</button>`;
+        } else {
+            document.getElementById('mapResult').innerText = 'Error calculating distance (fallback applied).';
+        }
+    } catch(e) {
+        document.getElementById('mapResult').innerText = 'Network error.';
+    }
+}
+</script>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

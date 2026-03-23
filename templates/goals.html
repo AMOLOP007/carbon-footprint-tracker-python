@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="{{ url_for('static', filename='aetherra_logo.svg') }}" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sustainability Goals - Aetherra</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .goal-card { 
+            background: rgba(255,255,255,0.03); 
+            border: 1px solid rgba(255,255,255,0.05); 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin-bottom: 16px; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .goal-card:hover {
+            border-color: rgba(46, 204, 113, 0.3);
+            background: rgba(255,255,255,0.05);
+            transform: translateY(-2px);
+        }
+        .goal-card h4 { color: #2ecc71; margin: 0; }
+        
+        .goal-progress { height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; margin-top: 12px; overflow: hidden; }
+        .goal-progress-fill { height: 100%; background: #2ecc71; border-radius: 4px; transition: width 0.6s ease; }
+        
+        .goal-steps-container {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .goal-steps-container.active {
+            max-height: 800px;
+            opacity: 1;
+            margin-top: 10px;
+        }
+        
+        .action-step-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .action-step-item:hover {
+            background: rgba(46, 204, 113, 0.08);
+        }
+        
+        .goal-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: #2ecc71;
+            cursor: pointer;
+        }
+
+        .goal-tag { 
+            display: inline-block; 
+            background: rgba(46,204,113,0.08); 
+            color: #2ecc71; 
+            padding: 9px 18px; 
+            border-radius: 20px; 
+            margin: 5px; 
+            cursor: pointer; 
+            font-size: 0.9rem; 
+            border: 1px solid rgba(46,204,113,0.2); 
+            transition: all 0.2s; 
+        }
+        .goal-tag:hover { 
+            background: #2ecc71; 
+            color: #0f0f0f; 
+            transform: scale(1.05);
+        }
+
+        .btn-remove {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-remove:hover {
+            background: #e74c3c;
+            color: #fff;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .pulsing {
+            animation: pulse-border 1.5s infinite;
+        }
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/dashboard" class="logo-area">
+        <img src="{{ url_for('static', filename='aetherra_logo.svg') }}" alt="Aetherra Logo">
+        <span>Aetherra</span>
+    </a>
+    <ul class="nav-links">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/calculator">Calculator</a></li>
+        <li><a href="/reports">Reports</a></li>
+        <li><a href="/goals" class="active">Goals</a></li>
+        <li><a href="/logout">Logout</a></li>
+    </ul>
+</nav>
+
+<div class="page-content" style="max-width: 700px;">
+    <h1 class="page-title">Sustainability Goals</h1>
+    <p class="page-subtitle">Set targets for your company's carbon reduction. Pick from suggestions or create your own.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-msg {{ category }}" style="text-align: center;">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- active goals -->
+    {% if goals|length > 0 %}
+    <div class="card" style="margin-bottom: 24px;">
+        <h3 style="margin-bottom: 20px;">Active Sustainability Goals</h3>
+        {% for g in goals %}
+        <div class="goal-card expanded-support" id="goal-{{ loop.index }}" onclick="toggleGoalSteps('goal-{{ loop.index }}')">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h4 style="margin:0;">{{ g.title }}</h4>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span id="expand-icon-{{ loop.index }}" style="font-size:0.8rem; color:#666; transition: transform 0.3s ease;">▼ Steps</span>
+                    <form action="/goals/delete" method="POST" style="margin:0;" onclick="event.stopPropagation()">
+                        <input type="hidden" name="goal_id" value="{{ g._id }}">
+                        <button type="submit" class="btn-remove">Remove</button>
+                    </form>
+                </div>
+            </div>
+            
+            <p style="margin-bottom:15px; font-size: 0.93rem; color: #aaa;">{{ g.description }}</p>
+            
+            {% if g.target_reduction %}
+            <div class="goal-progress">
+                <div class="goal-progress-fill" style="width: {{ [g.progress|default(0), 100]|min }}%;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                <span style="font-size:0.78rem; color:#666;">Target: {{ g.target_reduction }}% reduction</span>
+                <span style="font-size:0.78rem; color:#2ecc71; font-weight:500;">{{ g.progress|default(0) }}% complete</span>
+            </div>
+            {% endif %}
+
+            <!-- Collapsible Action Plan -->
+            <div class="goal-steps-container" id="steps-{{ loop.index }}">
+                {% if g.action_plan %}
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08);">
+                    <span style="font-size:0.75rem; color:#666; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Action Plan:</span>
+                    <ul style="list-style:none; padding:0; margin:12px 0 0 0;">
+                        {% for step in g.action_plan %}
+                        <li class="action-step-item">
+                            <input type="checkbox" class="goal-checkbox">
+                            <span>{{ step }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% else %}
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); text-align:center;">
+                    <p style="font-size:0.85rem; color:#666;">No recorded steps for this custom goal.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ai generator / suggestions -->
+    <div class="card" style="margin-bottom: 24px; border: 1px solid rgba(46, 204, 113, 0.2); background: rgba(46, 204, 113, 0.02);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3>AI Goal Discovery</h3>
+            <button onclick="generateAIGoal()" id="aiBtn" class="btn btn-dark" style="padding: 10px 18px; font-size: 0.85rem; border: 1px solid rgba(46, 204, 113, 0.4); box-shadow: 0 0 15px rgba(46, 204, 113, 0.1);">
+                ✨ AI Recommend
+            </button>
+        </div>
+
+        <!-- AI result area (replacing the old preview) -->
+        <div id="aiResult" style="display:none; padding:20px; background:rgba(0,0,0,0.3); border-radius:12px; border: 1px solid #444; margin-bottom:20px; animation: slideDown 0.3s ease;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                <h4 id="aiTitle" style="color:#2ecc71; margin:0; font-size:1.1rem;"></h4>
+                <div id="aiTarget" style="background:#1a1a1a; padding:4px 12px; border-radius:20px; color:#2ecc71; font-weight:bold; font-size:0.8rem; border:1px solid #2ecc71;"></div>
+            </div>
+            <p id="aiDesc" style="font-size:0.9rem; color:#999; margin-bottom:15px;"></p>
+            <button onclick="confirmAddAI()" class="btn btn-primary" style="width:100%;">🎯 Add Recommended Goal</button>
+        </div>
+
+        <p style="color:#666; font-size:0.85rem; margin-bottom:15px;">Or pick from our standard sustainability targets:</p>
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+            {% for s in suggestions %}
+            <div class="goal-tag" onclick="addPreset('{{ s.id }}')">{{ s.title }}</div>
+            {% endfor %}
+        </div>
+
+        <form action="/goals/add-preset" method="POST" id="presetForm" style="display:none;">
+            <input type="hidden" name="preset_id" id="preset_id" value="">
+        </form>
+    </div>
+
+    <!-- custom goal -->
+        <form action="/goals/add-custom" method="POST" id="customForm">
+            <input type="hidden" name="action_plan" id="customPlan" value="[]">
+            <div class="form-group">
+                <label>Goal Title</label>
+                <input type="text" name="title" id="customTitle" placeholder="e.g. Reduce office energy by 20%" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" name="description" id="customDesc" placeholder="Briefly describe the objective" required>
+            </div>
+            <div class="form-group">
+                <label>Target Reduction (%)</label>
+                <input type="number" name="target_reduction" id="customTarget" placeholder="e.g. 15" min="1" max="100" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:12px;">Create Manual Goal</button>
+        </form>
+    </div>
+</div>
+
+<script>
+// toggle active goal expansion
+function toggleGoalSteps(cardId) {
+    const card = document.getElementById(cardId);
+    const container = card.querySelector('.goal-steps-container');
+    const icon = card.querySelector('[id^="expand-icon-"]');
+    
+    const isExpanded = container.classList.contains('active');
+    
+    // close all others first (optional, but cleaner)
+    document.querySelectorAll('.goal-steps-container').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('[id^="expand-icon-"]').forEach(i => i.style.transform = 'rotate(0deg)');
+    
+    if (!isExpanded) {
+        container.classList.add('active');
+        icon.style.transform = 'rotate(180deg)';
+    }
+}
+
+// simple add for presets
+function addPreset(id) {
+    document.getElementById('preset_id').value = id;
+    document.getElementById('presetForm').submit();
+}
+
+// AI logic
+let currentAIGoal = null;
+
+async function generateAIGoal() {
+    const btn = document.getElementById('aiBtn');
+    const resultDiv = document.getElementById('aiResult');
+    
+    btn.disabled = true;
+    btn.classList.add('pulsing');
+    btn.innerText = "✨ AI Analyzing...";
+    
+    try {
+        const resp = await fetch('/api/generate-goal');
+        const data = await resp.json();
+        
+        currentAIGoal = data;
+        
+        document.getElementById('aiTitle').innerText = data.title;
+        document.getElementById('aiDesc').innerText = data.description;
+        document.getElementById('aiTarget').innerText = data.target_reduction + '% Reduc.';
+        
+        resultDiv.style.display = 'block';
+        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (e) {
+        alert("AI is currently refining its knowledge. Please use our standard goals for now!");
+    } finally {
+        btn.disabled = false;
+        btn.classList.remove('pulsing');
+        btn.innerText = "✨ AI Recommend";
+    }
+}
+
+function confirmAddAI() {
+    if (!currentAIGoal) return;
+    
+    document.getElementById('customTitle').value = currentAIGoal.title;
+    document.getElementById('customDesc').value = currentAIGoal.description;
+    document.getElementById('customTarget').value = currentAIGoal.target_reduction;
+    document.getElementById('customPlan').value = JSON.stringify(currentAIGoal.action_plan || []);
+    
+    document.getElementById('customForm').submit();
+}
+</script>
+</div>
+
+<script>
+function addPreset(id) {
+    document.getElementById('preset_id').value = id;
+    document.getElementById('presetForm').submit();
+}
+</script>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
