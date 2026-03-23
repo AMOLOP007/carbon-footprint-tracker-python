@@ -424,7 +424,21 @@ def onboarding():
     if request.method == 'POST':
         company_name = request.form['company_name']
         domain = request.form['domain']
-        post = request.form['post']
+        post = request.form['post'].strip()
+        
+        # normalize post to catch variations
+        def normalize_post(p):
+            p = p.lower().strip()
+            if p in ['ceo', 'c.e.o', 'c.e.o.', 'chief executive officer', 'chief executive']: return 'ceo'
+            if p in ['manager', 'general manager']: return 'manager'
+            if p in ['sales head', 'head of sales', 'sales manager']: return 'sales_head'
+            if p in ['publicity head', 'head of publicity', 'pr head']: return 'publicity_head'
+            if p in ['cto', 'chief technology officer']: return 'cto'
+            if p in ['cfo', 'chief financial officer']: return 'cfo'
+            return p
+            
+        norm_post = normalize_post(post)
+        protected_roles = ['ceo', 'manager', 'sales_head', 'publicity_head', 'cto', 'cfo']
         
         comp = companies_col.find_one({"name": company_name})
         if not comp:
@@ -449,6 +463,13 @@ def onboarding():
                         companies_col.update_one({"_id": ObjectId(comp_id)}, {"$set": {"logo_path": path}})
         else:
             comp_id = str(comp['_id'])
+            # Check for duplicate high-level roles inside the existing company
+            if norm_post in protected_roles:
+                existing_users = users_col.find({"company_id": comp_id})
+                for eu in existing_users:
+                    if normalize_post(eu.get('post', '')) == norm_post and str(eu['_id']) != session['user_id']:
+                        flash(f'The position "{post}" is already claimed at {company_name}. Please contact your administrator or enter a different role.', 'error')
+                        return redirect(url_for('onboarding'))
             
         users_col.update_one({"_id": ObjectId(session['user_id'])}, {"$set": {"company_id": comp_id, "post": post}})
         session['company_id'] = comp_id
