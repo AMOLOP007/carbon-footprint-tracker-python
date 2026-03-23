@@ -1,35 +1,65 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <g transform="translate(50 50) rotate(35) scale(0.75) translate(-50 -50)">
-    <!-- Left Half of Leaf (Lighter Green) -->
+  <defs>
+    <linearGradient id="leafGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F766E" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
+      <feMerge>
+        <feMergeNode in="coloredBlur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Ambient faint background circle based exactly on your snippet -->
+  <path
+    d="M50 5 C20 5, 5 20, 5 50 C5 80, 20 95, 50 95 C80 95, 95 80, 95 50 C95 20, 80 5, 50 5 Z"
+    stroke="currentColor"
+    stroke-width="1"
+    fill="none"
+    opacity="0.2"
+  />
+
+  <g filter="url(#glow)" transform="translate(50 50) rotate(35) scale(0.75) translate(-50 -50)">
+    <!-- Organic Leaf Outline (Kept the broad shape) -->
     <path 
-      d="M 50 95 C 5 80, -5 30, 50 5 L 50 95 Z" 
-      fill="#61A338" 
+      d="M 50 95 C 5 80, -5 30, 50 5 C 105 30, 95 80, 50 95 Z" 
+      stroke="url(#leafGradient)" 
+      stroke-width="3" 
+      stroke-linejoin="round"
+      fill="none"
     />
     
-    <!-- Right Half of Leaf (Darker Green) -->
-    <path 
-      d="M 50 5 C 105 30, 95 80, 50 95 L 50 5 Z" 
-      fill="#53912D" 
-    />
-    
-    <!-- Stem & Central Vein -->
+    <!-- Central Vein & Stem -->
     <path 
       d="M 50 105 L 50 5" 
-      stroke="#3A6E1E" 
-      stroke-width="3" 
+      stroke="url(#leafGradient)" 
+      stroke-width="2.5" 
       stroke-linecap="round"
+      fill="none"
     />
 
     <!-- Left Side Veins -->
-    <path d="M 50 80 Q 30 75 15 55" stroke="#3A6E1E" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-    <path d="M 50 60 Q 30 55 18 35" stroke="#3A6E1E" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-    <path d="M 50 40 Q 35 35 28 20" stroke="#3A6E1E" stroke-width="2" stroke-linecap="round" fill="none"/>
-    <path d="M 50 20 Q 40 18 38 10" stroke="#3A6E1E" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <path d="M 50 80 Q 30 75 15 55" stroke="url(#leafGradient)" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <path d="M 50 60 Q 30 55 18 35" stroke="url(#leafGradient)" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <path d="M 50 40 Q 35 35 28 20" stroke="url(#leafGradient)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <path d="M 50 20 Q 40 18 38 10" stroke="url(#leafGradient)" stroke-width="1" stroke-linecap="round" fill="none"/>
 
-    <!-- Right Side Veins (Slightly asymmetrical for organic feel) -->
-    <path d="M 50 75 Q 70 70 85 50" stroke="#3A6E1E" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-    <path d="M 50 55 Q 70 50 82 30" stroke="#3A6E1E" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-    <path d="M 50 35 Q 65 30 72 15" stroke="#3A6E1E" stroke-width="2" stroke-linecap="round" fill="none"/>
-    <path d="M 50 18 Q 58 15 60 8" stroke="#3A6E1E" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <!-- Right Side Veins -->
+    <path d="M 50 75 Q 70 70 85 50" stroke="url(#leafGradient)" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <path d="M 50 55 Q 70 50 82 30" stroke="url(#leafGradient)" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <path d="M 50 35 Q 65 30 72 15" stroke="url(#leafGradient)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <path d="M 50 18 Q 58 15 60 8" stroke="url(#leafGradient)" stroke-width="1" stroke-linecap="round" fill="none"/>
+
+    <!-- Tech Nodes (Restored your glowing node accents to the vein tips!) -->
+    <circle cx="15" cy="55" r="2.5" fill="#10B981" />
+    <circle cx="18" cy="35" r="2.5" fill="#10B981" />
+    <circle cx="28" cy="20" r="2" fill="#0F766E" />
+    <circle cx="85" cy="50" r="2.5" fill="#10B981" />
+    <circle cx="82" cy="30" r="2.5" fill="#10B981" />
+    <circle cx="72" cy="15" r="2" fill="#0F766E" />
+    <circle cx="50" cy="5" r="3" fill="#10B981" />
   </g>
 </svg>
