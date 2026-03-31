@@ -271,7 +271,7 @@ def generate_pdf(report):
     try:
         if comp and comp.get('logo_path'):
             logo_path = comp.get('logo_path')
-            if os.path.exists(logo_path):
+            if os.path.exists(logo_path) and not logo_path.lower().endswith('.svg'):
                 pdf.image(logo_path, x=160, y=10, h=30)
     except Exception as e:
         print("Logo render error:", e)
@@ -622,42 +622,72 @@ GOAL_PRESETS = [
         "title": "Reduce electricity use by 20%", 
         "description": "Switch to energy-efficient lighting and optimize HVAC schedules.", 
         "target_reduction": 20,
-        "action_plan": ["Audit all lighting and switch to LEDs", "Install occupancy sensors in labs/offices", "Optimize HVAC setpoints (24-26°C)", "Implement 'Power Down' Friday policies"]
+        "action_plan": [
+            "- **Energy Audit**: Conduct a comprehensive energy audit across all office floors, server rooms, and common areas to identify which zones consume the most electricity during peak and off-peak hours.",
+            "- **LED Retrofit**: Replace all existing fluorescent and halogen lighting fixtures with energy-efficient LED panels and install motion-activated occupancy sensors in corridors, restrooms, and meeting rooms.",
+            "- **HVAC Optimization**: Reconfigure HVAC setpoints to operate within the 24-26°C range during business hours and implement automatic shutdown schedules for evenings and weekends.",
+            "- **Power Down Fridays**: Launch an internal 'Power Down Friday' initiative encouraging all departments to fully shut down non-essential equipment and monitors before leaving for the weekend."
+        ]
     },
     {
         "id": "fleet_ev_transition", 
         "title": "Transition 30% of fleet to EV", 
         "description": "Replace aging diesel vehicles with electric alternatives.", 
         "target_reduction": 30,
-        "action_plan": ["Identify high-mileage diesel vehicles for replacement", "Install on-site Level 2 EV charging stations", "Apply for government EV subsidies", "Train drivers on regenerative braking use"]
+        "action_plan": [
+            "- **Fleet Utilization Analysis**: Analyze fleet utilization data to identify the top 30% of vehicles with the highest annual mileage and fuel consumption — these are the prime candidates for EV replacement.",
+            "- **Infrastructure Setup**: Install Level 2 EV charging stations at your primary office or warehouse locations, ensuring at least one charger per every 3 EVs to avoid queuing during shifts.",
+            "- **Incentive Sourcing**: Research and apply for applicable government subsidies such as FAME-II incentives, state-level EV purchase rebates, and corporate green fleet tax deductions.",
+            "- **Driver Training**: Schedule mandatory driver training sessions on EV-specific techniques including regenerative braking, optimal charging habits, and route planning for range efficiency."
+        ]
     },
     {
         "id": "renewable_energy", 
         "title": "Source 50% renewable energy", 
         "description": "Install rooftop solar or sign a green energy PPA.", 
         "target_reduction": 50,
-        "action_plan": ["Run a solar feasibility study on factory roof", "Contact state utility for Green Power tariff", "Sign a Power Purchase Agreement (PPA)", "Install battery storage to buffer solar output"]
+        "action_plan": [
+            "- **Solar Feasibility Study**: Commission a professional solar feasibility study on your factory or office rooftop to assess available surface area, structural load capacity, and annual solar irradiance potential.",
+            "- **Green Tariff Negotiation**: Contact your state electricity utility provider to explore Green Power tariff plans or open-access renewable energy options that allow direct purchase from solar/wind farms.",
+            "- **PPA Implementation**: Negotiate and sign a long-term Power Purchase Agreement (PPA) with a certified renewable energy developer, locking in fixed rates for 10-15 years to hedge against grid price increases.",
+            "- **BESS Sizing**: Install on-site battery energy storage systems (BESS) to buffer solar output fluctuations, store excess daytime generation, and provide backup during grid outages."
+        ]
     },
     {
         "id": "reduce_waste", 
         "title": "Cut operational waste by 25%", 
         "description": "Implement recycling and reduce packaging waste.", 
         "target_reduction": 25,
-        "action_plan": ["Conduct a waste audit to find top scrap sources", "Switch to reusable shipping pallets", "Implement a zero-paper billing system", "Partner with a certified e-waste recycler"]
+        "action_plan": [
+            "- **Waste Stream Audit**: Conduct a detailed waste stream audit spanning at least 4 weeks, categorizing all waste by type (paper, plastic, e-waste, organic, hazardous) and tracking volume per department.",
+            "- **Reusable Logistics Container**: Switch from single-use packaging materials to reusable shipping containers, biodegradable packing peanuts, and returnable pallet systems for outbound logistics.",
+            "- **Paperless Operations**: Digitize all internal invoicing, purchase orders, and approval workflows to eliminate paper consumption — target a fully zero-paper billing and documentation system.",
+            "- **Certified E-Waste Disposal**: Partner with a certified e-waste recycling vendor to responsibly dispose of obsolete IT hardware, batteries, and peripherals while recovering valuable materials."
+        ]
     },
     {
         "id": "remote_work", 
         "title": "Reduce commute via Remote Work", 
         "description": "Allow hybrid schedules to cut employee commute emissions.", 
         "target_reduction": 40,
-        "action_plan": ["Survey employees on commute distances", "Deploy secure VPN/Remote tools for all staff", "Set mandatory Work-From-Home days", "Optimize office square footage to reduce HVAC"]
+        "action_plan": [
+            "- **Commute Survey & Baseline Setup**: Survey all employees to collect data on their daily commute distances, modes of transport, and willingness to work remotely — use this to model potential emission savings.",
+            "- **Remote IT Stack**: Deploy enterprise-grade secure VPN access, cloud collaboration tools (Teams/Slack), and virtual desktop infrastructure so all staff can work productively from home.",
+            "- **Hybrid Policy Rollout**: Establish a formal hybrid work policy with 2-3 mandatory work-from-home days per week, prioritizing roles that don't require physical presence on site.",
+            "- **Facility Downsizing**: Downsize or consolidate office floor space based on reduced daily occupancy, which directly lowers HVAC, lighting, and overall facility energy consumption."
+        ]
     },
     {
         "id": "server_efficiency", 
         "title": "Improve server efficiency by 30%", 
         "description": "Consolidate servers and migrate to green cloud data centers.", 
         "target_reduction": 30,
-        "action_plan": ["Decommission 'Zombie' servers and VMs", "Migrate workloads to Azure/AWS Carbon-Neutral regions", "Increase server room temp to 27°C (ASHRAE)", "Implement liquid cooling for high-density racks"]
+        "action_plan": [
+            "- **Zombie Server Audit**: Run a full infrastructure audit to identify and decommission 'zombie' servers — idle virtual machines and physical hosts that consume power but serve no active workloads.",
+            "- **Cloud Migration**: Migrate eligible workloads to carbon-neutral cloud regions (e.g., Azure West Europe, AWS eu-north-1) that run on 100% renewable energy and publish sustainability reports.",
+            "- **Thermal Control Guidelines**: Raise server room ambient temperature to 27°C in line with ASHRAE thermal guidelines, which can reduce cooling energy by up to 20% without impacting hardware reliability.",
+            "- **Advanced Cooling Setup**: Evaluate and implement liquid cooling or hot-aisle containment systems for high-density server racks, reducing reliance on traditional CRAC/CRAH air conditioning units."
+        ]
     },
 ]
 
@@ -731,37 +761,151 @@ def generate_goal_api():
     
     comp = companies_col.find_one({"_id": ObjectId(session['company_id'])})
     domain = comp.get('domain', 'technology')
+    comp_name = comp.get('name', 'Company')
     
-    # get latest report to make it relevant
-    latest = reports_col.find_one({"company_id": session['company_id']}, sort=[("_id", -1)])
-    context = ""
-    if latest:
-        context = f"Latest report shows {latest['total_emissions']} tCO2e total. Domain: {domain}."
+    # pull the last 5 reports to build a real data picture
+    recent_reports = list(reports_col.find(
+        {"company_id": session['company_id']}
+    ).sort("_id", -1).limit(5))
+    
+    # build a rich context string from actual report data
+    context_parts = [f"Company: {comp_name}. Industry: {domain}."]
+    
+    if recent_reports:
+        latest = recent_reports[0]
+        context_parts.append(f"Latest report ({latest.get('month', 'N/A')}): Total {latest.get('total_emissions', 0)} tCO2e.")
+        
+        # identify the highest emission category from latest report
+        categories = {
+            "transport": latest.get('transport_emissions', 0),
+            "electricity": latest.get('electricity_emissions', 0),
+            "logistics": latest.get('logistics_emissions', 0),
+            "manufacturing": latest.get('manufacturing_emissions', 0)
+        }
+        highest_cat = max(categories, key=categories.get)
+        highest_val = categories[highest_cat]
+        context_parts.append(f"Highest emission category: {highest_cat} at {highest_val} tCO2e ({round(highest_val / max(latest.get('total_emissions', 0.01), 0.01) * 100, 1)}% of total).")
+        
+        # breakdown string
+        breakdown = ", ".join([f"{k}: {v} tCO2e" for k, v in categories.items() if v > 0])
+        context_parts.append(f"Full breakdown: {breakdown}.")
+        
+        # trend analysis across reports
+        if len(recent_reports) > 1:
+            totals = [r.get('total_emissions', 0) for r in reversed(recent_reports)]
+            if totals[0] > 0:
+                trend_pct = round(((totals[-1] - totals[0]) / totals[0]) * 100, 1)
+                direction = "increasing" if trend_pct > 0 else "decreasing"
+                context_parts.append(f"Emission trend over {len(recent_reports)} reports: {direction} by {abs(trend_pct)}%.")
+        
+        # item-level insights from latest report
+        items = latest.get('item_breakdown', [])
+        if items:
+            top_items = sorted(items, key=lambda x: x.get('emissions', 0), reverse=True)[:3]
+            top_str = ", ".join([f"{i.get('name', 'Unknown')} ({i.get('emissions', 0)} tCO2e)" for i in top_items])
+            context_parts.append(f"Top 3 emitting assets: {top_str}.")
+    else:
+        context_parts.append("No reports submitted yet. Suggest a starter goal appropriate for their domain.")
+    
+    context = " ".join(context_parts)
 
-    prompt = f"""Generate ONE high-impact, professional sustainability goal for a {domain} company.
-Context: {context}
-Return ONLY a raw JSON object:
+    prompt = f"""You are an expert sustainability consultant analyzing a real company's emission data.
+Based on the following data, generate ONE highly specific, actionable sustainability goal.
+The goal must directly address the company's actual weak points shown in their data.
+Make it deeply personalized by citing the exact numbers and categories from the breakdown.
+
+{context}
+
+Return ONLY a raw JSON object (no markdown, no preamble):
 {{
-  "title": "Catchy short title",
-  "description": "Brief professional description",
+  "title": "Concise, impactful goal title",
+  "description": "2-3 sentence professional description explaining WHY this goal matters for this specific company based on their data",
   "target_reduction": percentage_number,
-  "action_plan": ["discrete step 1", "discrete step 2", "discrete step 3", "discrete step 4"]
+  "action_plan": [
+    "- **Detailed Objective 1:** Specific implementation instruction (2-3 sentences with measurable actions). Provide an exact metric to track.",
+    "- **Detailed Objective 2:** Specific implementation instruction (2-3 sentences with measurable actions). Provide an exact metric to track.",
+    "- **Detailed Objective 3:** Specific implementation instruction (2-3 sentences with measurable actions). Provide an exact metric to track.",
+    "- **Detailed Objective 4:** Specific implementation instruction (2-3 sentences with measurable actions). Provide an exact metric to track."
+  ]
 }}"""
 
     # AI TIERED CALL
     from api_guard import safe_api_call, can_call
     
-    # helper for offline fallback
+    # helper for offline fallback that uses actual report data
     def get_offline_goal():
+        # even the fallback should be data-aware
+        if recent_reports:
+            latest = recent_reports[0]
+            cats = {
+                "transport": latest.get('transport_emissions', 0),
+                "electricity": latest.get('electricity_emissions', 0),
+                "logistics": latest.get('logistics_emissions', 0),
+                "manufacturing": latest.get('manufacturing_emissions', 0)
+            }
+            worst = max(cats, key=cats.get)
+            worst_val = cats[worst]
+            total = latest.get('total_emissions', 0.01)
+            pct = round(worst_val / max(total, 0.01) * 100, 1)
+            
+            domain_goals = {
+                "transport": {
+                    "title": f"Reduce Transport Emissions ({pct}% of total footprint)",
+                    "description": f"Your transport emissions account for {pct}% of your total carbon footprint at {worst_val} tCO2e. Transitioning to fuel-efficient or electric vehicles and optimizing route planning can significantly reduce this.",
+                    "target_reduction": min(int(pct * 0.6), 50),
+                    "action_plan": [
+                        f"- **Fleet Audit**: Audit your current fleet: your transport emissions of {worst_val} tCO2e suggest high fuel consumption. Map every vehicle's monthly distance, fuel type, and idling time to identify the worst offenders.",
+                        "- **EV Replacement**: Replace the highest-emission vehicles with electric or hybrid alternatives. Prioritize vehicles that exceed 3,000 km/month, as they offer the biggest ROI on EV conversion.",
+                        "- **Route Optimization**: Implement a GPS-based route optimization system to minimize total distance driven. Studies show that optimized routing can reduce fleet fuel consumption by 15-25%.",
+                        "- **Driver Scorecards**: Establish a monthly transport emissions dashboard and set per-vehicle emission targets. Review and benchmark each driver's performance against the fleet average."
+                    ]
+                },
+                "electricity": {
+                    "title": f"Cut Electricity Consumption ({pct}% of total footprint)",
+                    "description": f"Electricity is your dominant emission source at {worst_val} tCO2e ({pct}% of total). Reducing energy waste through smart building management and renewable sourcing can deliver significant cuts.",
+                    "target_reduction": min(int(pct * 0.5), 40),
+                    "action_plan": [
+                        f"- **Energy Audit**: Your electricity emissions of {worst_val} tCO2e indicate substantial grid dependency. Commission a full energy audit to identify the top 5 consumption hotspots in your facilities.",
+                        "- **Smart Metering**: Install smart meters and IoT energy monitors on every major circuit. Set up automated alerts when any zone exceeds its baseline consumption by more than 10%.",
+                        "- **HVAC & Lighting Upgrade**: Replace legacy HVAC and lighting systems with energy-efficient alternatives. LED retrofits and variable-speed HVAC drives typically pay for themselves within 18 months.",
+                        "- **Renewable PPA**: Explore signing a renewable energy Power Purchase Agreement (PPA) or installing rooftop solar to offset at least 30% of your grid electricity consumption."
+                    ]
+                },
+                "logistics": {
+                    "title": f"Optimize Logistics Footprint ({pct}% of total footprint)",
+                    "description": f"Logistics emissions contribute {worst_val} tCO2e ({pct}% of total). Consolidating shipments, choosing low-carbon freight options, and optimizing warehouse operations can reduce this significantly.",
+                    "target_reduction": min(int(pct * 0.5), 35),
+                    "action_plan": [
+                        f"- **Shipment Consolidation**: Your logistics emissions stand at {worst_val} tCO2e. Start by analyzing shipment frequency and consolidation opportunities — reducing the number of half-full trucks can cut emissions by 20-30%.",
+                        "- **Intermodal Transition**: Negotiate with logistics partners to use rail or intermodal transport for long-distance routes (over 500 km), which produces up to 75% less CO2 per tonne-km than road freight.",
+                        "- **Warehouse Efficiency**: Optimize warehouse energy consumption by upgrading to high-efficiency lighting, installing dock door seals to reduce HVAC loss, and automating conveyor idle-shutdown timers.",
+                        "- **Carrier KPI Tracking**: Implement a carbon-per-shipment tracking KPI in your logistics dashboard. Set quarterly targets to reduce the average CO2 per kg delivered by 15%."
+                    ]
+                },
+                "manufacturing": {
+                    "title": f"Reduce Manufacturing Emissions ({pct}% of total footprint)",
+                    "description": f"Manufacturing/machinery operations are your largest emission source at {worst_val} tCO2e ({pct}% of total). Improving process efficiency and equipment maintenance can drive significant reductions.",
+                    "target_reduction": min(int(pct * 0.5), 35),
+                    "action_plan": [
+                        f"- **Machinery Efficiency Study**: Your manufacturing emissions of {worst_val} tCO2e suggest high energy consumption from machinery. Conduct a process efficiency study to identify which machines have the highest energy draw per unit of output.",
+                        "- **Predictive Maintenance Data**: Implement a predictive maintenance program using IoT sensors on critical equipment. Well-maintained machines run 10-20% more efficiently and produce fewer emissions than poorly maintained ones.",
+                        "- **VFD Upgrades**: Evaluate whether switching to variable frequency drives (VFDs) on motors and compressors could reduce energy waste. VFDs adjust motor speed to match actual load, saving 20-40% of energy.",
+                        "- **Shift-Level Monitoring**: Set up shift-level emission tracking so each production shift has visibility into their carbon impact. Create weekly leaderboards highlighting the most efficient shifts."
+                    ]
+                }
+            }
+            return domain_goals.get(worst, domain_goals["electricity"])
+        
+        # no reports at all — generic starter goal
         return {
-            "title": f"Efficiency Drive ({domain.title()})",
-            "description": f"Reduce waste and idle consumption across your {domain} operations.",
+            "title": f"Baseline Carbon Assessment ({domain.title()})",
+            "description": f"Your company hasn't submitted any emission reports yet. The first step toward sustainability is establishing a clear baseline of your {domain.replace('_', ' ')} operations' carbon footprint.",
             "target_reduction": 15,
             "action_plan": [
-                "Install occupancy sensors in all office spaces",
-                "Set automated power-down schedules for hardware",
-                "Conduct a weekend energy audit to find phantom loads",
-                "Promote a culture of switching off unused equipment"
+                "- **Digital Invoice Uploads**: Collect 3 months of utility bills (electricity, gas, water) from all facilities and upload them through Aetherra's PDF Analyzer to establish your baseline energy consumption metrics.",
+                "- **Vehicle Fleet Logging**: Document all company-owned vehicles and equipment, including fuel type, monthly mileage/hours, and age. This data feeds directly into Aetherra's calculator for accurate transport emission estimates.",
+                "- **Prioritize Quick Wins**: Identify your top 3 emission sources from the baseline data and prioritize them for immediate reduction. Focus on quick wins like eliminating idle equipment and fixing compressed air leaks.",
+                "- **Assign Sustainability Champions**: Set up monthly emission reporting using Aetherra's calculator to track progress. Assign a sustainability champion in each department to own data collection and goal accountability."
             ]
         }
 
@@ -796,7 +940,7 @@ Return ONLY a raw JSON object:
         except Exception as e:
             print("OpenAI Goal Err:", e)
 
-    # 3. ABSOLUTE FAILSAFE
+    # 3. ABSOLUTE FAILSAFE (still data-driven)
     return get_offline_goal()
 
 
@@ -834,14 +978,14 @@ def settings():
             file = request.files['logo']
             if file.filename != '':
                 ext = file.filename.rsplit('.', 1)[-1].lower()
-                if ext in ['png', 'jpg', 'jpeg']:
+                if ext in ['png', 'jpg', 'jpeg', 'svg']:
                     os.makedirs('static/uploads', exist_ok=True)
                     path = f"static/uploads/{session['company_id']}.{ext}"
                     file.save(path)
                     companies_col.update_one({"_id": ObjectId(session['company_id'])}, {"$set": {"logo_path": path}})
                     flash("Logo updated successfully!", "success")
                 else:
-                    flash("Invalid file format. Use PNG or JPG.", "error")
+                    flash("Invalid file format. Use PNG, JPG, or SVG.", "error")
                     
     comp = companies_col.find_one({"_id": ObjectId(session['company_id'])})
     # ensure backwards compatibility for existing companies

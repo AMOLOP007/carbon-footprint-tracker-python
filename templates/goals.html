@@ -42,15 +42,20 @@
         
         .action-step-item {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 12px;
-            margin-bottom: 8px;
-            padding: 10px;
-            border-radius: 8px;
-            transition: background 0.2s;
+            margin-bottom: 10px;
+            padding: 14px 16px;
+            border-radius: 10px;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-left: 3px solid rgba(46, 204, 113, 0.3);
         }
         .action-step-item:hover {
             background: rgba(46, 204, 113, 0.08);
+            border-left-color: #2ecc71;
+            transform: translateX(4px);
         }
         
         .goal-checkbox {
@@ -145,7 +150,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <h4 style="margin:0;">{{ g.title }}</h4>
                 <div style="display:flex; align-items:center; gap:12px;">
-                    <span id="expand-icon-{{ loop.index }}" style="font-size:0.8rem; color:#666; transition: transform 0.3s ease;">▼ Steps</span>
+                    <span style="font-size:0.8rem; color:#666; display:inline-flex; align-items:center; gap:4px;"><span id="expand-icon-{{ loop.index }}" style="display:inline-block; transition: transform 0.3s ease;">▼</span> Steps</span>
                     <form action="/goals/delete" method="POST" style="margin:0;" onclick="event.stopPropagation()">
                         <input type="hidden" name="goal_id" value="{{ g._id }}">
                         <button type="submit" class="btn-remove">Remove</button>
@@ -169,15 +174,18 @@
             <div class="goal-steps-container" id="steps-{{ loop.index }}">
                 {% if g.action_plan %}
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08);">
-                    <span style="font-size:0.75rem; color:#666; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Action Plan:</span>
-                    <ul style="list-style:none; padding:0; margin:12px 0 0 0;">
+                    <span style="font-size:0.75rem; color:#666; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">📋 Action Plan ({{ g.action_plan|length }} steps):</span>
+                    <ol style="list-style:none; padding:0; margin:12px 0 0 0; counter-reset: step-counter;">
                         {% for step in g.action_plan %}
-                        <li class="action-step-item">
-                            <input type="checkbox" class="goal-checkbox">
-                            <span>{{ step }}</span>
+                        <li class="action-step-item" style="counter-increment: step-counter;">
+                            <input type="checkbox" class="goal-checkbox" onclick="event.stopPropagation()">
+                            <div style="flex:1;">
+                                <span style="color:#2ecc71; font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">Step {{ loop.index }}</span>
+                                <div class="markdown-step" style="margin:4px 0 0 0; color:#ccc; font-size:0.92rem; line-height:1.5;">{{ step }}</div>
+                            </div>
                         </li>
                         {% endfor %}
-                    </ul>
+                    </ol>
                 </div>
                 {% else %}
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); text-align:center;">
@@ -222,6 +230,8 @@
     </div>
 
     <!-- custom goal -->
+    <div class="card">
+        <h3>Create a Custom Goal</h3>
         <form action="/goals/add-custom" method="POST" id="customForm">
             <input type="hidden" name="action_plan" id="customPlan" value="[]">
             <div class="form-group">
@@ -241,7 +251,13 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.markdown-step').forEach(el => {
+        el.innerHTML = marked.parse(el.textContent);
+    });
+});
 // toggle active goal expansion
 function toggleGoalSteps(cardId) {
     const card = document.getElementById(cardId);
@@ -307,14 +323,6 @@ function confirmAddAI() {
     document.getElementById('customPlan').value = JSON.stringify(currentAIGoal.action_plan || []);
     
     document.getElementById('customForm').submit();
-}
-</script>
-</div>
-
-<script>
-function addPreset(id) {
-    document.getElementById('preset_id').value = id;
-    document.getElementById('presetForm').submit();
 }
 </script>
 
